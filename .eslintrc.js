@@ -1,3 +1,13 @@
 module.exports = {
-    "extends": "standard"
+    root: true,
+    extends: 'standard',
+    env: {
+        node: true,
+        mocha: true
+    },
+    globals: {
+        rootRequire: true
+    }
 };
+
+
