@@ -1,120 +1,123 @@
-var lib = '../' + (process.env.CODE_COV ? 'lib-cov' : 'lib')
+const lib = '../' + (process.env.CODE_COV ? 'lib-cov' : 'lib')
 
-var core = require(lib + '/core')
+const core = require(lib + '/core')
 
-var chai = require('chai')
+const chai = require('chai')
 
-var expect = chai.expect
+const expect = chai.expect
 
-var APP_KEY = '23333843'
+const appKey = '23333843'
 
-var APP_SECRET = 'c4bba86a87a44e7a35517467488c7303'
+const appSecret = 'c4bba86a87a44e7a35517467488c7303'
 
 chai.should()
 
 describe('core.js', function () {
-	describe('config()', function () {
-		it('should change core\'s config successfully', function (done) {
-			core.config({
-				app_key: APP_KEY,
-				app_secret: APP_SECRET
-			})
+  describe('config()', function () {
+    it('should change core\'s config successfully', function (done) {
+      core.config({
+        'app_key'   : appKey,
+        'app_secret': appSecret
+      })
 
-			var cfg = core.getConfig()
+      const cfg = core.getConfig()
 
-			expect(cfg).to.be.an('object')
-			expect(cfg.app_key).to.equal(APP_KEY)
-			expect(cfg.app_secret).to.equal(APP_SECRET)
+      expect(cfg).to.be.an('object')
+      expect(cfg.app_key).to.equal(appKey)
+      expect(cfg.app_secret).to.equal(appSecret)
 
-			done()
-		})
-	})
+      done()
+    })
+  })
 
-	describe('call()', function () {
-		it('should get areas successfully with default http config', function (done) {
-			this.timeout(100000)
+  describe('call()', function () {
+    it('should get areas successfully with default http config',
+      function (done) {
+        this.timeout(100000)
 
-			core.call({
-				method: 'taobao.areas.get',
-				fields: 'id,type,name,parent_id,zip'
-			}, function (data) {
-				expect(data).to.be.an('object')
-				expect(data.areas_get_response).to.be.an('object')
-				expect(data.areas_get_response.areas).to.be.an('object')
-				expect(data.areas_get_response.areas.area).to.be.an('array')
-				expect(data.areas_get_response.areas.area).to.have.length.above(0)
-				expect(data.areas_get_response.areas.area[0]).to.contain.keys('id', 'name', 'parent_id', 'type')
-				done()
-			})
-		})
+        core.call({
+          method: 'taobao.areas.get',
+          fields: 'id,type,name,parent_id,zip'
+        }, function (data) {
+          expect(data).to.be.an('object')
+          expect(data.areas_get_response).to.be.an('object')
+          expect(data.areas_get_response.areas).to.be.an('object')
+          expect(data.areas_get_response.areas.area).to.be.an('array')
+          expect(data.areas_get_response.areas.area).to.have.length.above(0)
+          expect(data.areas_get_response.areas.area[0])
+            .to.contain.keys('id', 'name', 'parent_id', 'type')
+          done()
+        })
+      })
 
-		it('should get areas successfully with https', function (done) {
-			this.timeout(100000)
+    it('should get areas successfully with https', function (done) {
+      this.timeout(100000)
 
-			core.call({
-				protocol: 'https'
-			}, {
-				method: 'taobao.areas.get',
-				fields: 'id,type,name,parent_id,zip'
-			}, function (data) {
-				expect(data).to.be.an('object')
-				expect(data.areas_get_response).to.be.an('object')
-				expect(data.areas_get_response.areas).to.be.an('object')
-				expect(data.areas_get_response.areas.area).to.be.an('array')
-				expect(data.areas_get_response.areas.area).to.have.length.above(0)
-				expect(data.areas_get_response.areas.area[0]).to.contain.keys('id', 'name', 'parent_id', 'type')
-				done()
-			})
-		})
+      core.call({
+        protocol: 'https'
+      }, {
+        method: 'taobao.areas.get',
+        fields: 'id,type,name,parent_id,zip'
+      }, function (data) {
+        expect(data).to.be.an('object')
+        expect(data.areas_get_response).to.be.an('object')
+        expect(data.areas_get_response.areas).to.be.an('object')
+        expect(data.areas_get_response.areas.area).to.be.an('array')
+        expect(data.areas_get_response.areas.area).to.have.length.above(0)
+        expect(data.areas_get_response.areas.area[0])
+          .to.contain.keys('id', 'name', 'parent_id', 'type')
+        done()
+      })
+    })
 
-		it('should fail when get areas using http POST method', function (done) {
-			this.timeout(100000)
+    it('should fail when get areas using http POST method', function (done) {
+      this.timeout(100000)
 
-			core.call({
-				method: 'post'
-			}, {
-				method: 'taobao.areas.get',
-				fields: 'id,type,name,parent_id,zip'
-			}, function (data) {
-				expect(data).to.be.an('object')
-				expect(data.error_response).to.be.an('object')
-				expect(data.error_response.statusCode).to.equal(411)
+      core.call({
+        method: 'post'
+      }, {
+        method: 'taobao.areas.get',
+        fields: 'id,type,name,parent_id,zip'
+      }, function (data) {
+        expect(data).to.be.an('object')
+        expect(data.error_response).to.be.an('object')
+        expect(data.error_response.statusCode).to.equal(411)
 
-				done()
-			})
-		})
-	})
+        done()
+      })
+    })
+  })
 
-	describe('generateApi()', function () {
-		var api
+  describe('generateApi()', function () {
+    let api
 
-		it('should generate api as expected', function (done) {
-			api = core.generateApi([
-				'areas.get'
-			])
+    it('should generate api as expected', function (done) {
+      api = core.generateApi([
+        'areas.get'
+      ])
 
-			expect(api).to.be.an('object')
-			expect(api).to.contain.keys('areasGet')
-			expect(api.areasGet).to.be.an('function')
+      expect(api).to.be.an('object')
+      expect(api).to.contain.keys('areasGet')
+      expect(api.areasGet).to.be.an('function')
 
-			done()
-		})
+      done()
+    })
 
-		it('should success when call with generatedApi', function (done) {
-			this.timeout(100000)
-			api.areasGet({
-				fields: 'id,type,name,parent_id,zip'
-			}, function (data) {
-				expect(data).to.be.an('object')
-				console.log(data)
-				expect(data.areas_get_response).to.be.an('object')
-				expect(data.areas_get_response.areas).to.be.an('object')
-				expect(data.areas_get_response.areas.area).to.be.an('array')
-				expect(data.areas_get_response.areas.area).to.have.length.above(0)
-				expect(data.areas_get_response.areas.area[0]).to.contain.keys('id', 'name', 'parent_id', 'type')
+    it('should success when call with generatedApi', function (done) {
+      this.timeout(100000)
+      api.areasGet({
+        fields: 'id,type,name,parent_id,zip'
+      }, function (data) {
+        expect(data).to.be.an('object')
+        expect(data.areas_get_response).to.be.an('object')
+        expect(data.areas_get_response.areas).to.be.an('object')
+        expect(data.areas_get_response.areas.area).to.be.an('array')
+        expect(data.areas_get_response.areas.area).to.have.length.above(0)
+        expect(data.areas_get_response.areas.area[0])
+          .to.contain.keys('id', 'name', 'parent_id', 'type')
 
-				done()
-			})
-		})
-	})
+        done()
+      })
+    })
+  })
 })
