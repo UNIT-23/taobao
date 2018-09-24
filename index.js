@@ -21,10 +21,8 @@ fs.readdirSync(path.join(__dirname, 'lib')).forEach(filename=> {
     if (!~excludeFiles.indexOf(name)) {
         const {apis, namespace = null} = require(path.join(__dirname,'lib',name)).default || {}
         
-        if(apis){
           const methods = taobao.core.generateApi(apis,namespace)
           _.extend(taobao, methods)
-        }
         
 	}
 })
