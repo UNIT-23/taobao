@@ -1,2 +1,1 @@
-const taobao = require('./taobao')
-module.exports = taobao
+module.exports = require('./taobao')

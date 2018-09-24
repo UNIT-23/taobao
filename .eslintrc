@@ -10,7 +10,7 @@
   },
   # add your custom rules here
     "rules":{
-        "no-tabs": 0,
+      "no-tabs": 0,
       "max-len": 2,
       # force indentation of 2
       "indent": ["error", 2, {
