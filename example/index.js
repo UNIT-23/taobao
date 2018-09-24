@@ -1,18 +1,23 @@
-require('dotenv').config()
-const taobao = require('./../taobao')
+const taobao = require('./../taobao');
 const config = require('./config')
+taobao.config(config)
 
-console.log(config.config.app_key)
-console.log(config.config.app_secret)
-console.log(config.config.session)
-taobao.config({
-    app_key: config.config.app_key,
-    app_secret: config.config.app_secret,
-    session: config.config.session
-});
-
-taobao.userBuyerGet({
-    fields: 'user_id,nick,sex,buyer_credit,avatar,has_shop,vip_info'
-}, function(data) {
-    console.log(data);
-});
+// taobao.core.call({
+//     method: 'taobao.product.get',
+// 	cid: 50011999,
+// 	product_id: 271824,
+// 	fields: 'name'
+// },null)
+// .then(res => console.log(res.data), err => console.log(err.message))
+//
+// taobao.productGet({
+// 		cid: 50011999,
+// 		product_id: 271824,
+// 		fields: 'name'
+// }, function(api){
+// 	api.then(res => console.log(res.data), err => console.log(err.message))
+// })
+//
+taobao.itemcatsGet({}, null, function(res){
+	console.log(res)
+})

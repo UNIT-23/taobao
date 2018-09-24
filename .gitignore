@@ -3,5 +3,4 @@ node_modules
 .idea
 lib-cov
 coverage.html
-.env
 
