@@ -5,7 +5,7 @@ import Taobao from './taobao'
 export default {
 	apis:[
 		{
-			method:'taobao.itemcats.authorize.get',
+			method:'itemcats.authorize.get',
 			defaultArg:{
 				fields: ' brand.vid, brand.name, item_cat.cid, item_cat.name, item_cat.status,' +
 			'item_cat.sort_order,item_cat.parent_cid,item_cat.is_parent, xinpin_item_cat.cid,' +
@@ -14,17 +14,17 @@ export default {
 			}
 		},
 		{
-			method: 'taobao.itemcats.get',
+			method: 'itemcats.get',
 			defaultArg:{parent_cid: 0}
 		},
-		'taobao.itemcats.increment.get',
-		'taobao.itemprops.get',
+		'itemcats.increment.get',
+		'itemprops.get',
 		{
-			method: 'taobao.itempropvalues.get',
+			method: 'itempropvalues.get',
 			defaultArg:{
 				fields: 'cid,pid,prop_name,vid,name,name_alias,status,sort_order'
 			}
 		},
-		'taobao.topats.itemcats.get'
+		'topats.itemcats.get'
 	]
 }
