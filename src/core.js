@@ -205,7 +205,7 @@ export default class Core {
 			dotReg = /\.([a-z])/ig,
 			upperRep = (all, letter)=>  letter.toUpperCase()
 
-		_.each(apiArr, (apiObj)=> {
+		_.each(apiArr, apiObj => {
 			var method, defaultArg = {}, namespace = defaultNamespace || 'taobao';
 
 			if (typeof apiObj == 'string') {

@@ -1,22 +1,22 @@
-const lib = '../' + (process.env.CODE_COV ? 'lib-cov' : 'lib');
+var lib = '../' + (process.env.CODE_COV ? 'lib-cov' : 'lib');
 
-const taobao = require('../index'),
-chai = require('chai'),
-expect = chai.expect,
-APP_KEY = '23333843',
-APP_SECRET = 'c4bba86a87a44e7a35517467488c7303';
+var core = require(lib + '/core'),
+	chai = require('chai'),
+	expect = chai.expect,
+	APP_KEY = '23333843',
+	APP_SECRET = 'c4bba86a87a44e7a35517467488c7303';
 
 chai.should();
 
-describe('taobao.js', function() {
+describe('core.js', function() {
 	describe('config()', function() {
 		it('should change core\'s config successfully', function(done) {
-			taobao.config({
+			core.config({
 				app_key: APP_KEY,
 				app_secret: APP_SECRET
 			});
 
-			const cfg = taobao.core.getConfig();
+			var cfg = core.getConfig();
 
 			expect(cfg).to.be.an('object');
 			expect(cfg.app_key).to.equal(APP_KEY);
@@ -29,7 +29,8 @@ describe('taobao.js', function() {
 	describe('call()', function() {
 		it('should get areas successfully with default http config', function(done) {
 			this.timeout(100000);
-			taobao.core.call({
+
+			core.call({
 				method: 'taobao.areas.get',
 				fields: 'id,type,name,parent_id,zip'
 			}, function(data) {
@@ -46,7 +47,7 @@ describe('taobao.js', function() {
 		it('should get areas successfully with https', function(done) {
 			this.timeout(100000);
 
-			taobao.core.call({
+			core.call({
 				protocol: 'https'
 			}, {
 				method: 'taobao.areas.get',
@@ -64,8 +65,8 @@ describe('taobao.js', function() {
 
 		it('should fail when get areas using http POST method', function(done) {
 			this.timeout(100000);
-			
-			taobao.core.call({
+
+			core.call({
 				method: 'post'
 			}, {
 				method: 'taobao.areas.get',
@@ -81,10 +82,10 @@ describe('taobao.js', function() {
 	});
 
 	describe('generateApi()', function() {
-		let api;
+		var api;
 
 		it('should generate api as expected', function(done) {
-			api = taobao.core.generateApi([
+			api = core.generateApi([
 				'areas.get'
 			]);
 
@@ -94,14 +95,14 @@ describe('taobao.js', function() {
 
 			done();
 		});
+
 		it('should success when call with generatedApi', function(done) {
 			this.timeout(100000);
-			
 			api.areasGet({
 				fields: 'id,type,name,parent_id,zip'
 			}, function (data) {
-				console.log(data);
 				expect(data).to.be.an('object');
+				console.log(data);
 				expect(data.areas_get_response).to.be.an('object');
 				expect(data.areas_get_response.areas).to.be.an('object');
 				expect(data.areas_get_response.areas.area).to.be.an('array');
