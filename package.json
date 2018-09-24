@@ -51,7 +51,9 @@
 	},
 	"scripts": {
 		"test": "make test",
-		"prepublish": "npm prune"
+		"prepublish": "npm prune",
+		"lint-fix": "node_modules/.bin/eslint --ext .js --ignore-pattern 'example/' 'lib/' --fix .",
+		"lint": "node_modules/.bin/eslint --ext .js --ignore-pattern 'example/' 'lib/' ."
 	},
 	"engines": {
 		"node": ">=0.10"
