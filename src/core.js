@@ -5,6 +5,7 @@ import {crypt} from './helper'
 import querystring from 'querystring'
 import url from 'url'
 import apierror from './error'
+import fetch from 'node-fetch'
 
 const cfg = {
 	httpRealHost: 'gw.api.taobao.com',
@@ -111,7 +112,6 @@ export default class Core {
 				break;
 		}
 		
-		var protocolProxy = protocol == 'https' ? require('https') : require('http');
 		var resData = '',
 			headers = {};
 
@@ -119,48 +119,31 @@ export default class Core {
 			headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		}
 
-		var reqOpts = {
-			method: httpMethod,
-			host: host,
-			headers:headers,
-			path: path + (httpMethod == 'get' ? '?' + params : '')
+		const reqOpts = {
+			method: httpMethod.toUpperCase(),
+			headers:headers
 		};
 
-		var req = protocolProxy.request(reqOpts, res=> {
-			if (res.statusCode != 200) {
-				callback && callback({error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg, statusCode: res.statusCode}});
-				req.isErrorReturned = true;
-			} else {
-				res.setEncoding('utf-8');
-				res.on('data', chunk=>{
-					resData += chunk;
-				});
-				res.on('end', ()=> {
-					var data;
-					try {
-						data = JSON.parse(resData);
-					} catch (e) {
-						data = resData;
-					}
-					callback && callback(data);
-				});
+		const baseUrl = protocol + '://' + host
+		path += (httpMethod == 'get' ? '?' + params : '')
+		
+		fetch(baseUrl + path, reqOpts)
+		.then(res=> res.text())
+		.then(responseAsText=>{
+			try {
+				const jsonResponse = JSON.parse(responseAsText);
+				callback(jsonResponse)
+			} catch (e) {
+				callback({error_response:{ msg: responseAsText }})
 			}
-		});
-
-		req.on('error', e=> {
-			if (req.isErrorReturned) {
-				return;
-			} else {
-				callback && callback({error_response: {code: apierror.NETERROR.code, msg: e.message || apierror.NETERROR.msg}});
-				req.isErrorReturned = true;
+		})
+		.catch(e=>{
+			if(e.code === 'ENOTFOUND'){
+				callback({error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg}});
 			}
-		});
-
-		if (httpMethod == 'post') {
-			req.write(params);
-		}
-
-		req.end();
+			
+			callback(e)
+		})
 	}
 
 	signArgs(args) {

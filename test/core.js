@@ -64,7 +64,7 @@ describe('taobao.js', function() {
 
 		it('should fail when get areas using http POST method', function(done) {
 			this.timeout(100000);
-			
+
 			taobao.core.call({
 				method: 'post'
 			}, {
@@ -100,7 +100,6 @@ describe('taobao.js', function() {
 			api.areasGet({
 				fields: 'id,type,name,parent_id,zip'
 			}, function (data) {
-				console.log(data);
 				expect(data).to.be.an('object');
 				expect(data.areas_get_response).to.be.an('object');
 				expect(data.areas_get_response.areas).to.be.an('object');

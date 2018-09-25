@@ -5,14 +5,14 @@ import Taobao from './taobao'
 export default {
 	apis:[
 		{
-			method: 'taobao.user.buyer.get',
+			method: 'user.buyer.get',
 			defaultArg:{
 				fields: 'user_id,nick,sex,buyer_credit,avatar,has_shop,vip_info'
 			}
 		},
-		'taobao.user.get',
+		'user.get',
 		{
-			method: 'taobao.user.seller.get',
+			method: 'user.seller.get',
 			defaultArg:{
 				fields: 'user_id,nick,sex,seller_credit,type,has_more_pic,item_img_num,item_img_size,prop_img_num,' +
 					'prop_img_size,auto_repost,promoted_type,status,alipay_bind,consumer_protection,avatar,liangpin,' +
@@ -20,6 +20,6 @@ export default {
 					'magazine_subscribe,vertical_market,online_gaming'
 			}
 		},
-		'taobao.users.get'
+		'users.get'
 	]
 }
