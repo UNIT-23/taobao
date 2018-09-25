@@ -5,9 +5,6 @@
     node: true,
     mocha: true
   },
-  globals: {
-    rootRequire: true
-  },
   # add your custom rules here
     "rules":{
       "no-tabs": 0,
