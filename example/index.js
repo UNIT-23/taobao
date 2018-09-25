@@ -1,4 +1,4 @@
-const taobao = require('./../taobao')
+const taobao = require('./../index')
 const config = require('./config')
 taobao.config(config)
 
