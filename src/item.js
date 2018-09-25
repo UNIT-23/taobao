@@ -3,6 +3,7 @@ export default {
   apis: [
     'aftersale.get',
     'item.add',
+    { method: 'item.add.schema.get', namespace: 'tmall' },
     'item.anchor.get',
     'item.bseller.add',
     'item.cseller.add',
@@ -18,6 +19,7 @@ export default {
     'item.quantity.update',
     'item.recommend.add',
     'item.recommend.delete',
+    { method: 'item.schema.add', namespace: 'tmall' },
     'item.sku.add',
     'item.sku.delete',
     'item.sku.get',

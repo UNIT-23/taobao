@@ -221,6 +221,8 @@ taobao.userBuyerGet({
 48. taobao.productSpecGet
 49. taobao.productSpecPicUpload
 50. taobao.productSpecsGet
+51. taobao.TmallItemAddSchemaGet
+52. taobao.TmallItemSchemaAdd
 
 #### 交易API
 1. taobao.topatsTradesFullinfoGet
@@ -749,6 +751,13 @@ taobao.userBuyerGet({
 3. taobao.billBillsGet
 4. taobao.billBookBillGet
 5. taobao.billBookBillsGet
+
+#### Promotion API
+1. taobao.tmallPromotionTipItemAdd
+2. taobao.tmallPromotionTipCampaignCreate
+3. taobao.tmallPromotionTjbCampaignGet
+4. taobao.tmallPromotionTipCampaignRemove
+5. taobao.tmallPromotionTipCampaignModify
 
 
 ## Q & A
