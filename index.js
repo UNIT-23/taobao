@@ -1,1 +1,1 @@
-module.exports = require('./taobao');
+module.exports = require('./taobao')

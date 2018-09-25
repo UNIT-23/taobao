@@ -1,0 +1,39 @@
+{
+  root: true,
+  extends: 'standard',
+  env: {
+    node: true,
+    mocha: true
+  },
+  globals: {
+    rootRequire: true
+  },
+  # add your custom rules here
+    "rules":{
+      "no-tabs": 0,
+      "max-len": 2,
+      # force indentation of 2
+      "indent": ["error", 2, {
+        "MemberExpression": 1
+      }],
+      # allow paren-less arrow functions
+      'arrow-parens': 0,
+      # no use of var keyword
+      'no-var': 2,
+      # prefer the use of const
+      'prefer-const': 1,
+      # variables and properties should always be camelcase
+      'camelcase' : ['error', {'properties' : 'always'}],
+      # no variables with underscores,
+      'no-underscore-dangle': 2,
+      # key-spacing for objects
+      'key-spacing': ['error', { 'beforeColon': false, 'afterColon': true, 'align' : 'colon' }],
+      # spaces after and before curly braces in objects
+      'object-curly-spacing': ['error', 'always'],
+      # always use curly braces
+      'curly': ['error', 'all'],
+      # one true javascript brace style
+      'brace-style' : ['error', '1tbs'],
+      'no-console' : 'error'
+    }
+}
