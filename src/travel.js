@@ -1,6 +1,6 @@
 
 export default {
-	apis:[
-	'travel.itemsarea.get'
-]
+  apis: [
+    'travel.itemsarea.get'
+  ]
 }

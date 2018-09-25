@@ -1,38 +1,35 @@
-import http from 'http'
-import moment from 'moment'
 import _ from 'lodash'
-import {crypt} from './helper'
+import { crypt, dateString } from './helper'
 import querystring from 'querystring'
-import url from 'url'
 import apierror from './error'
 
 const cfg = {
-	httpRealHost: 'gw.api.taobao.com',
-	httpRealPath: '/router/rest',
-	httpSandHost: 'gw.api.tbsandbox.com',
-	httpSandPath: '/router/rest',
-	httpsRealHost: 'eco.taobao.com',
-	httpsRealPath: '/router/rest',
-	httpsSandHost: 'gw.api.tbsandbox.com',
-	httpsSandPath: '/router/rest',
-	app_key: '',
-	app_secret: '',
-	sandbox: false,
-	session: ''
-};
+  httpRealHost : 'gw.api.taobao.com',
+  httpRealPath : '/router/rest',
+  httpSandHost : 'gw.api.tbsandbox.com',
+  httpSandPath : '/router/rest',
+  httpsRealHost: 'eco.taobao.com',
+  httpsRealPath: '/router/rest',
+  httpsSandHost: 'gw.api.tbsandbox.com',
+  httpsSandPath: '/router/rest',
+  'app_key'    : '',
+  'app_secret' : '',
+  sandbox      : false,
+  session      : ''
+}
 
 export default class Core {
-	constructor(){
-       this.error= apierror
-    }
+  constructor () {
+    this.error = apierror
+  }
 
-	config(config) {
-		_.extend(cfg, config);
-	}
-
-	/**
+  config (config) {
+    _.extend(cfg, config)
+  }
+  /*eslint-disable*/
+  /**
 	 * low-level for call tao bao api
-	 * 
+	 *
 	 * @param {Object}
 	 *            httpArgs http arguments for call api
 	 * <pre>
@@ -55,7 +52,7 @@ export default class Core {
 	 *   app_secret: 'xxxxx',						//app secret - required, config use init method or pass through here
 	 *   v: '2.0',									//api version - optional, default is 2.0
 	 *   sign_method: 'md5'							//sign method - optional, default is md5, now only support md5
-	 *   
+	 *
 	 *   // method specific arguments
 	 *
 	 * }
@@ -63,174 +60,188 @@ export default class Core {
 	 *
 	 * @param {Function}
 	 *            callback function with parameters to get the result
-	 * 
+	 *
 	 * @returns {Array[search...]}
 	 */
-	call (httpArgs, args, callback) {
-		//compatiple with call (args, callback) signature
-		if (arguments.length == 2) {
-			callback = args;	
-			args = httpArgs;
-			httpArgs = {};
-		}
+  /* eslint-enable */
+  call (httpArgs, args, callback) {
+    // compatiple with call (args, callback) signature
+    if (arguments.length === 2) {
+      callback = args
+      args = httpArgs
+      httpArgs = {}
+    }
+    args.timestamp = args.timestamp || dateString(new Date())
+    args.format = args.format || 'json'
+    args['app_key'] = args['app_key'] || cfg['app_key']
+    args['app_secret'] = args['app_secret'] || cfg['app_secret']
+    args.v = args.v || '2.0'
+    args['sign_method'] = args.sign_method || 'md5'
+    args.session = args.session || cfg.session
 
-		args.method = args.method;
-		args.timestamp = args.timestamp || moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
-		args.format = args.format || 'json';
-		args.app_key = args.app_key || cfg.app_key;
-		args.app_secret = args.app_secret || cfg.app_secret;
-		args.v = args.v || '2.0';
-		args.sign_method = args.sign_method || 'md5';
-		args.session = args.session || cfg.session;
+    if (!args.session) {
+      delete args.session
+    }
 
-		if (!args.session) {
-			delete args.session;
-		}
+    args.sign = this.signArgs(args)
 
-		args.sign = this.signArgs(args);
+    let	params = ''
 
-		var	params = '',
-			app_secret = args.app_secret;
+    delete args['app_secret']
+    params = querystring.stringify(args)
 
-		delete args.app_secret;
-		params = querystring.stringify(args);
+    let host, path
+    const protocol = (httpArgs.protocol || 'http').toLowerCase()
+    const httpMethod = (httpArgs.method || 'get').toLowerCase()
+    const sandbox = httpArgs.sandbox === true ? true : cfg.sandbox === true
 
-		var host, path, protocol, httpMethod, sandbox;
-		protocol = (httpArgs.protocol || 'http').toLowerCase();
-		httpMethod = (httpArgs.method || 'get').toLowerCase();
-		sandbox = httpArgs.sandbox === true ? true : cfg.sandbox === true;
+    switch (protocol) {
+    case 'https':
+      host = sandbox ? cfg.httpsSandHost : cfg.httpsRealHost
+      path = sandbox ? cfg.httpsSandPath : cfg.httpsRealPath
+      break
+    default:
+      host = sandbox ? cfg.httpSandHost : cfg.httpRealHost
+      path = sandbox ? cfg.httpSandPath : cfg.httpsRealPath
+      break
+    }
 
-		switch (protocol) {			
-			case 'https':
-				host = sandbox ? cfg.httpsSandHost : cfg.httpsRealHost;
-				path = sandbox ? cfg.httpsSandPath : cfg.httpsRealPath;
-				break;
-			default:
-				host = sandbox ? cfg.httpSandHost : cfg.httpRealHost;
-				path = sandbox ? cfg.httpSandPath : cfg.httpsRealPath;
-				break;
-		}
-		
-		var protocolProxy = protocol == 'https' ? require('https') : require('http');
-		var resData = '',
-			headers = {};
+    const protocolProxy =
+        protocol === 'https' ? require('https') : require('http')
+    let resData = ''
 
-		if (httpMethod == 'post') {
-			headers['Content-Type'] = 'application/x-www-form-urlencoded';
-		}
+    const headers = {}
 
-		var reqOpts = {
-			method: httpMethod,
-			host: host,
-			headers:headers,
-			path: path + (httpMethod == 'get' ? '?' + params : '')
-		};
+    if (httpMethod === 'post') {
+      headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    }
 
-		var req = protocolProxy.request(reqOpts, res=> {
-			if (res.statusCode != 200) {
-				callback && callback({error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg, statusCode: res.statusCode}});
-				req.isErrorReturned = true;
-			} else {
-				res.setEncoding('utf-8');
-				res.on('data', chunk=>{
-					resData += chunk;
-				});
-				res.on('end', ()=> {
-					var data;
-					try {
-						data = JSON.parse(resData);
-					} catch (e) {
-						data = resData;
-					}
-					callback && callback(data);
-				});
-			}
-		});
+    const reqOpts = {
+      method : httpMethod,
+      host   : host,
+      headers: headers,
+      path   : path + (httpMethod === 'get' ? '?' + params : '')
+    }
 
-		req.on('error', e=> {
-			if (req.isErrorReturned) {
-				return;
-			} else {
-				callback && callback({error_response: {code: apierror.NETERROR.code, msg: e.message || apierror.NETERROR.msg}});
-				req.isErrorReturned = true;
-			}
-		});
+    const req = protocolProxy.request(reqOpts, res => {
+      if (res.statusCode !== 200) {
+        // eslint-disable-next-line standard/no-callback-literal
+        callback && callback({
+          'error_response': {
+            code      : apierror.NETERROR.code,
+            msg       : apierror.NETERROR.msg,
+            statusCode: res.statusCode
+          } })
+        req.isErrorReturned = true
+      } else {
+        res.setEncoding('utf-8')
+        res.on('data', chunk => {
+          resData += chunk
+        })
+        res.on('end', () => {
+          let data
+          try {
+            data = JSON.parse(resData)
+          } catch (e) {
+            data = resData
+          }
+          callback && callback(data)
+        })
+      }
+    })
 
-		if (httpMethod == 'post') {
-			req.write(params);
-		}
+    req.on('error', e => {
+      if (req.isErrorReturned) {
 
-		req.end();
-	}
+      } else {
+        // eslint-disable-next-line standard/no-callback-literal
+        callback && callback({
+          'error_response': {
+            code: apierror.NETERROR.code,
+            msg : e.message || apierror.NETERROR.msg
+          } })
+        req.isErrorReturned = true
+      }
+    })
 
-	signArgs(args) {
-		var argArr = [];
+    if (httpMethod === 'post') {
+      req.write(params)
+    }
 
-		for (var argName in args) {
-			if (argName != 'sign' && argName != 'app_secret') {
-				argArr.push(argName + args[argName]);
-			}
-		}
-		if (args.sign_method == 'md5') {
-			var c = args.app_secret + argArr.sort().join('') + args.app_secret;
-		} else {
-			var c = argArr.sort().join('');
-		}
-		return crypt(c, args.sign_method, args.app_secret).toUpperCase();
-	}
+    req.end()
+  }
 
-	callDefaultArg(defArg, httpArgs, args, callback) {
-		defArg = defArg || {};
-		httpArgs = httpArgs || {};
+  signArgs (args) {
+    const argArr = []
 
-		if (_.isFunction(httpArgs)) {
-			callback = httpArgs;
-			this.call(defArg, callback);
-		} else if (_.isFunction(args)) {
-			callback = args;
-			args = httpArgs;
-			_.extend(defArg, args);
-			this.call(defArg, callback);
-		} else if (_.isFunction(callback)) {
-			_.extend(defArg, args);
-			this.call(httpArgs, defArg, callback);
-		} else {
-			throw apierror.ARGINVALID;
-		}
-	}
+    for (const argName in args) {
+      if (argName !== 'sign' && argName !== 'app_secret') {
+        argArr.push(argName + args[argName])
+      }
+    }
+    let c = argArr.sort().join('')
+    if (args.sign_method === 'md5') {
+      c = args.app_secret + argArr.sort().join('') + args.app_secret
+    }
+    return crypt(c, args.sign_method, args.app_secret).toUpperCase()
+  }
 
-	 generateApi(apiArr, defaultNamespace) {
-		apiArr = apiArr || [];
-		var api = {},
-			dotReg = /\.([a-z])/ig,
-			upperRep = (all, letter)=>  letter.toUpperCase()
+  callDefaultArg (defArg, httpArgs, args, callback) {
+    defArg = defArg || {}
+    httpArgs = httpArgs || {}
 
-		_.each(apiArr, apiObj => {
-			var method, defaultArg = {}, namespace = defaultNamespace || 'taobao';
+    if (_.isFunction(httpArgs)) {
+      callback = httpArgs
+      this.call(defArg, callback)
+    } else if (_.isFunction(args)) {
+      callback = args
+      args = httpArgs
+      _.extend(defArg, args)
+      this.call(defArg, callback)
+    } else if (_.isFunction(callback)) {
+      _.extend(defArg, args)
+      this.call(httpArgs, defArg, callback)
+    } else {
+      throw apierror.ARGINVALID
+    }
+  }
+  generateApi (apiArr, defaultNamespace) {
+    apiArr = apiArr || []
+    const api = {}
 
-			if (typeof apiObj == 'string') {
-				method = apiObj;
-			} else {
-				method = apiObj.method;
-				namespace = apiObj.namespace || defaultNamespace || 'taobao';
-				defaultArg = apiObj.defaultArg;
-			}
+    const dotReg = /\.([a-z])/ig
 
-			var methodName = (namespace == 'taobao' ? method : namespace + '.' + method).replace(dotReg, upperRep);
+    const upperRep = (all, letter) => letter.toUpperCase()
 
-			api[methodName] =  (httpArgs, args, callback)=> {
-				var defArg = _.extend({
-					method: namespace + '.' + method
-				}, defaultArg);
-				
-				this.callDefaultArg(defArg, httpArgs, args, callback);
-			};
-		});
+    _.each(apiArr, apiObj => {
+      let method
+      let defaultArg = {}
+      let namespace = defaultNamespace || 'taobao'
 
-		return api;
-	}
+      if (typeof apiObj === 'string') {
+        method = apiObj
+      } else {
+        method = apiObj.method
+        namespace = apiObj.namespace || defaultNamespace || 'taobao'
+        defaultArg = apiObj.defaultArg
+      }
 
-	getConfig() {
-		return cfg;
-	}
+      const methodName = (namespace === 'taobao'
+        ? method : namespace + '.' + method).replace(dotReg, upperRep)
+
+      api[methodName] = (httpArgs, args, callback) => {
+        const defArg = _.extend({
+          method: namespace + '.' + method
+        }, defaultArg)
+
+        this.callDefaultArg(defArg, httpArgs, args, callback)
+      }
+    })
+
+    return api
+  }
+
+  getConfig () {
+    return cfg
+  }
 };
