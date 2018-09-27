@@ -1,49 +1,46 @@
-import http from 'http'
-import moment from 'moment'
 import _ from 'lodash'
-import {crypt} from './helper'
+import { crypt, dateString } from './helper'
 import querystring from 'querystring'
-import url from 'url'
 import apierror from './error'
-import fetch from 'node-fetch'
 import FormData from 'form-data'
 import axios from 'axios'
 import fileType from 'file-type'
 
 const cfg = {
-	httpRealHost: 'gw.api.taobao.com',
-	httpRealPath: '/router/rest',
-	httpSandHost: 'gw.api.tbsandbox.com',
-	httpSandPath: '/router/rest',
-	httpsRealHost: 'eco.taobao.com',
-	httpsRealPath: '/router/rest',
-	httpsSandHost: 'gw.api.tbsandbox.com',
-	httpsSandPath: '/router/rest',
-	app_key: '',
-	app_secret: '',
-	sandbox: false,
-	session: ''
-};
+  httpRealHost : 'gw.api.taobao.com',
+  httpRealPath : '/router/rest',
+  httpSandHost : 'gw.api.tbsandbox.com',
+  httpSandPath : '/router/rest',
+  httpsRealHost: 'eco.taobao.com',
+  httpsRealPath: '/router/rest',
+  httpsSandHost: 'gw.api.tbsandbox.com',
+  httpsSandPath: '/router/rest',
+  'app_key'    : '',
+  'app_secret' : '',
+  sandbox      : false,
+  session      : ''
+}
 
 export default class Core {
-	constructor(){
-	   this.error= apierror
-	   this.api = axios.create({
-		   baseUrl: '',
-		   timeout: 3000000,
-    headers: {
-      'Content-Type': 'multipart/form-data;charset=utf-8'
-    }
-	   })
-    }
+  constructor () {
+    this.error = apierror
+    this.api = axios.create({
+      baseUrl: '',
+      timeout: 3000000,
+      headers: {
+        'Content-Type': 'multipart/form-data;charset=utf-8'
+      }
+    })
+  }
 
-	config(config) {
-		_.extend(cfg, config);
-	}
+  config (config) {
+    _.extend(cfg, config)
+  }
 
-	/**
+  /*eslint-disable*/
+  /**
 	 * low-level for call tao bao api
-	 * 
+	 *
 	 * @param {Object}
 	 *            httpArgs http arguments for call api
 	 * <pre>
@@ -66,7 +63,7 @@ export default class Core {
 	 *   app_secret: 'xxxxx',						//app secret - required, config use init method or pass through here
 	 *   v: '2.0',									//api version - optional, default is 2.0
 	 *   sign_method: 'md5'							//sign method - optional, default is md5, now only support md5
-	 *   
+	 *
 	 *   // method specific arguments
 	 *
 	 * }
@@ -74,9 +71,10 @@ export default class Core {
 	 *
 	 * @param {Function}
 	 *            callback function with parameters to get the result
-	 * 
+	 *
 	 * @returns {Array[search...]}
 	 */
+
 	call (httpArgs, args, callback) {
 		//compatiple with call (args, callback) signature
 		if (arguments.length === 2) {
@@ -85,11 +83,10 @@ export default class Core {
 			httpArgs = {};
 		}
 
-		args.method = args.method;
-		args.timestamp = args.timestamp || moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+		args.timestamp = args.timestamp || dateString(new Date())
 		args.format = args.format || 'json';
-		args.app_key = args.app_key || cfg.app_key;
-		args.app_secret = args.app_secret || cfg.app_secret;
+		args['app_key'] = args.app_key || cfg.app_key
+		args['app_secret'] = args.app_secret || cfg.app_secret
 		args.v = args.v || '2.0';
 		args.sign_method = args.sign_method || 'md5';
 		args.session = args.session || cfg.session;
@@ -100,10 +97,11 @@ export default class Core {
 
 		args.sign = this.signArgs(args);
 
-		var host, path, protocol, httpMethod, sandbox;
-		protocol = (httpArgs.protocol || 'http').toLowerCase();
-		httpMethod = (httpArgs.method || 'get').toLowerCase();
-		sandbox = httpArgs.sandbox === true ? true : cfg.sandbox === true;
+		let host, path
+		
+		const protocol = (httpArgs.protocol || 'http').toLowerCase();
+		const httpMethod = (httpArgs.method || 'get').toLowerCase();
+		const sandbox = httpArgs.sandbox === true ? true : cfg.sandbox === true;
 
 		switch (protocol) {			
 			case 'https':
@@ -123,8 +121,9 @@ export default class Core {
 		}
 
 
-		const baseUrl = protocol + '://' + host + path + (httpMethod === 'get' ? '?' +  querystring.stringify(_.omit(args,'app_secret')) : '')
-		console.log(baseUrl)
+		const baseUrl = protocol + '://' + host + path + (httpMethod === 'get' ? 
+		'?' +  querystring.stringify(_.omit(args,'app_secret')) : '')
+		
 		let apiCall = null
 		if(httpMethod !== 'get'){
 			console.log('post')
@@ -134,7 +133,7 @@ export default class Core {
 		  if (_.isBuffer(val)) {
 			let fileProps = null
 	  
-			const buffer = Buffer.from(val)
+			const buffer = Buffer.from(val);
 	  
 			if ((fileProps = fileType(buffer))) {
 			  formData.append(key, val, `${moment().unix(moment())}.${fileProps.ext}`)
@@ -143,11 +142,12 @@ export default class Core {
 			formData.append(key, val)
 		  }
 		})
-			
+		
 			apiCall = this.getHeaders(formData)
-			.then((headers)=>{
-				return  this.api.post(baseUrl, formData, {headers:{...headers,'transfer-encoding':'chunked'}})
-			})
+			.then(headers=> this.api.post(baseUrl, formData, {
+					headers:{...headers,'transfer-encoding':'chunked'}
+				})
+			)
 		}else{
 			apiCall = this.api.get(baseUrl)
 		}
@@ -165,20 +165,21 @@ export default class Core {
 	}
 
 	signArgs(args) {
-		var argArr = [];
+		const argArr = [];
 
-		for (var argName in args) {
+		for (const argName in args) {
 			if (argName != 'sign' && argName != 'app_secret' &&
 			!_.isBuffer(args[argName])) {
 				argArr.push(argName + args[argName]);
 			}
 		}
-		if (args.sign_method == 'md5') {
-			var c = args.app_secret + argArr.sort().join('') + args.app_secret;
-		} else {
-			var c = argArr.sort().join('');
-		}
-		return crypt(c, args.sign_method, args.app_secret).toUpperCase();
+		let c = argArr.sort().join('')
+	
+	if (args.sign_method === 'md5') {
+      c = args.app_secret + c + args.app_secret
+    }
+	
+	return crypt(c, args.sign_method, args.app_secret).toUpperCase()
 	}
 
 	callDefaultArg(defArg, httpArgs, args, callback) {
@@ -200,54 +201,57 @@ export default class Core {
 			throw apierror.ARGINVALID;
 		}
 	}
-
-	 generateApi(apiArr, defaultNamespace) {
-		apiArr = apiArr || [];
-		var api = {},
-			dotReg = /\.([a-z])/ig,
-			upperRep = (all, letter)=>  letter.toUpperCase()
-
+	generateApi (apiArr, defaultNamespace) {
+		apiArr = apiArr || []
+		const api = {}
+	
+		const dotReg = /\.([a-z])/ig
+	
+		const upperRep = (all, letter) => letter.toUpperCase()
+	
 		_.each(apiArr, apiObj => {
-			var method, defaultArg = {}, namespace = defaultNamespace || 'taobao';
-
-			if (typeof apiObj == 'string') {
-				method = apiObj;
-			} else {
-				method = apiObj.method;
-				namespace = apiObj.namespace || defaultNamespace || 'taobao';
-				defaultArg = apiObj.defaultArg;
-			}
-
-			var methodName = (namespace == 'taobao' ? method : namespace + '.' + method).replace(dotReg, upperRep);
-
-			api[methodName] =  (httpArgs, args, callback)=> {
-				var defArg = _.extend({
-					method: namespace + '.' + method
-				}, defaultArg);
-				
-				this.callDefaultArg(defArg, httpArgs, args, callback);
-			};
-		});
-
-		return api;
-	}
-
-	getConfig() {
-		return cfg;
-	}
+		  let method
+		  let defaultArg = {}
+		  let namespace = defaultNamespace || 'taobao'
+	
+		  if (typeof apiObj === 'string') {
+			method = apiObj
+		  } else {
+			method = apiObj.method
+			namespace = apiObj.namespace || defaultNamespace || 'taobao'
+			defaultArg = apiObj.defaultArg
+		  }
+	
+		  const methodName = (namespace === 'taobao'
+			? method : namespace + '.' + method).replace(dotReg, upperRep)
+	
+		  api[methodName] = (httpArgs, args, callback) => {
+			const defArg = _.extend({
+			  method: namespace + '.' + method
+			}, defaultArg)
+	
+			this.callDefaultArg(defArg, httpArgs, args, callback)
+		  }
+		})
+	
+		return api
+	  }
+	
+	  getConfig () {
+			return cfg
+	  }
 	 getHeaders(formData){
- return  new Promise((resolve, reject) =>
-    formData.getLength((err, length) => {
-      if (err) {
-        return reject(err)
-      }
+			return  new Promise((resolve, reject) =>
+					formData.getLength((err, length) => {
+						if (err) {
+							return reject(err)
+						}
 
-      const headers = _.extend({
-        'Content-Length': length
-      }, formData.getHeaders())
+						const headers = _.extend({
+							'Content-Length': length
+						}, formData.getHeaders())
 
-      return resolve(headers)
-    })
-  )
+						return resolve(headers)
+					})
+			)}
 }
-};

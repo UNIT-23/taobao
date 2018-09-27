@@ -1,114 +1,121 @@
-const lib = '../' + (process.env.CODE_COV ? 'lib-cov' : 'lib');
+const taobao = require('../index')
 
-const taobao = require('../index'),
-chai = require('chai'),
-expect = chai.expect,
-APP_KEY = '23333843',
-APP_SECRET = 'c4bba86a87a44e7a35517467488c7303';
+const chai = require('chai')
 
-chai.should();
+const expect = chai.expect
 
-describe('taobao.js', function() {
-	describe('config()', function() {
-		it('should change core\'s config successfully', function(done) {
-			taobao.config({
-				app_key: APP_KEY,
-				app_secret: APP_SECRET
-			});
+const APP_KEY = '23333843'
 
-			const cfg = taobao.core.getConfig();
+const APP_SECRET = 'c4bba86a87a44e7a35517467488c7303'
 
-			expect(cfg).to.be.an('object');
-			expect(cfg.app_key).to.equal(APP_KEY);
-			expect(cfg.app_secret).to.equal(APP_SECRET);
+chai.should()
 
-			done();
-		});
-	});
+describe('taobao.js', function () {
+  describe('config()', function () {
+    it('should change core\'s config successfully', function (done) {
+      taobao.config({
+        'app_key'   : APP_KEY,
+        'app_secret': APP_SECRET
+      })
 
-	describe('call()', function() {
-		it('should get areas successfully with default http config', function(done) {
-			this.timeout(100000);
-			taobao.core.call({
-				method: 'taobao.areas.get',
-				fields: 'id,type,name,parent_id,zip'
-			}, function(data) {
-				expect(data).to.be.an('object');
-				expect(data.areas_get_response).to.be.an('object');
-				expect(data.areas_get_response.areas).to.be.an('object');
-				expect(data.areas_get_response.areas.area).to.be.an('array');
-				expect(data.areas_get_response.areas.area).to.have.length.above(0);
-				expect(data.areas_get_response.areas.area[0]).to.contain.keys('id', 'name', 'parent_id', 'type');
-				done();
-			});
-		});
+      const cfg = taobao.core.getConfig()
 
-		it('should get areas successfully with https', function(done) {
-			this.timeout(100000);
+      expect(cfg).to.be.an('object')
+      expect(cfg.app_key).to.equal(APP_KEY)
+      expect(cfg.app_secret).to.equal(APP_SECRET)
 
-			taobao.core.call({
-				protocol: 'https'
-			}, {
-				method: 'taobao.areas.get',
-				fields: 'id,type,name,parent_id,zip'
-			}, function(data) {
-				expect(data).to.be.an('object');
-				expect(data.areas_get_response).to.be.an('object');
-				expect(data.areas_get_response.areas).to.be.an('object');
-				expect(data.areas_get_response.areas.area).to.be.an('array');
-				expect(data.areas_get_response.areas.area).to.have.length.above(0);
-				expect(data.areas_get_response.areas.area[0]).to.contain.keys('id', 'name', 'parent_id', 'type');
-				done();
-			});
-		});
+      done()
+    })
+  })
 
-		it('should fail when get areas using http POST method', function(done) {
-			this.timeout(100000);
+  describe('call()', function () {
+    it('should get areas successfully with default http config',
+      function (done) {
+        this.timeout(100000)
+        taobao.core.call({
+          method: 'taobao.areas.get',
+          fields: 'id,type,name,parent_id,zip'
+        }, function (data) {
+          expect(data).to.be.an('object')
+          expect(data.areas_get_response).to.be.an('object')
+          expect(data.areas_get_response.areas).to.be.an('object')
+          expect(data.areas_get_response.areas.area).to.be.an('array')
+          expect(data.areas_get_response.areas.area).to.have.length.above(0)
+          expect(data.areas_get_response.areas.area[0])
+            .to.contain.keys('id', 'name', 'parent_id', 'type')
+          done()
+        })
+      })
 
-			taobao.core.call({
-				method: 'post'
-			}, {
-				method: 'taobao.areas.get',
-				fields: 'id,type,name,parent_id,zip'
-			}, function(data) {
-				expect(data).to.be.an('object');
-				expect(data.error_response).to.be.an('object');
-				expect(data.error_response.statusCode).to.equal(411);
+    it('should get areas successfully with https', function (done) {
+      this.timeout(100000)
 
-				done();
-			});
-		});
-	});
+      taobao.core.call({
+        protocol: 'https'
+      }, {
+        method: 'taobao.areas.get',
+        fields: 'id,type,name,parent_id,zip'
+      }, function (data) {
+        expect(data).to.be.an('object')
+        expect(data.areas_get_response).to.be.an('object')
+        expect(data.areas_get_response.areas).to.be.an('object')
+        expect(data.areas_get_response.areas.area).to.be.an('array')
+        expect(data.areas_get_response.areas.area)
+          .to.have.length.above(0)
+        expect(data.areas_get_response.areas.area[0])
+          .to.contain.keys('id', 'name', 'parent_id', 'type')
+        done()
+      })
+    })
 
-	describe('generateApi()', function() {
-		let api;
+    it('should fail when get areas using http POST method', function (done) {
+      this.timeout(100000)
 
-		it('should generate api as expected', function(done) {
-			api = taobao.core.generateApi([
-				'areas.get'
-			]);
+      taobao.core.call({
+        method: 'post'
+      }, {
+        method: 'taobao.areas.get',
+        fields: 'id,type,name,parent_id,zip'
+      }, function (data) {
+        expect(data).to.be.an('object')
+        expect(data.error_response).to.be.an('object')
+        expect(data.error_response.statusCode).to.equal(411)
 
-			expect(api).to.be.an('object');
-			expect(api).to.contain.keys('areasGet');
-			expect(api.areasGet).to.be.an('function');
+        done()
+      })
+    })
+  })
 
-			done();
-		});
-		it('should success when call with generatedApi', function(done) {
-			this.timeout(100000);
-			
-			api.areasGet({
-				fields: 'id,type,name,parent_id,zip'
-			}, function (data) {
-				expect(data).to.be.an('object');
-				expect(data.areas_get_response).to.be.an('object');
-				expect(data.areas_get_response.areas).to.be.an('object');
-				expect(data.areas_get_response.areas.area).to.be.an('array');
-				expect(data.areas_get_response.areas.area).to.have.length.above(0);
-				expect(data.areas_get_response.areas.area[0]).to.contain.keys('id', 'name', 'parent_id', 'type');
+  describe('generateApi()', function () {
+    let api
 
-				done();
-			});
-		});
-	});
-});
+    it('should generate api as expected', function (done) {
+      api = taobao.core.generateApi([
+        'areas.get'
+      ])
+
+      expect(api).to.be.an('object')
+      expect(api).to.contain.keys('areasGet')
+      expect(api.areasGet).to.be.an('function')
+
+      done()
+    })
+    it('should success when call with generatedApi', function (done) {
+      this.timeout(100000)
+
+      api.areasGet({
+        fields: 'id,type,name,parent_id,zip'
+      }, function (data) {
+        expect(data).to.be.an('object')
+        expect(data.areas_get_response).to.be.an('object')
+        expect(data.areas_get_response.areas).to.be.an('object')
+        expect(data.areas_get_response.areas.area).to.be.an('array')
+        expect(data.areas_get_response.areas.area).to.have.length.above(0)
+        expect(data.areas_get_response.areas.area[0])
+          .to.contain.keys('id', 'name', 'parent_id', 'type')
+
+        done()
+      })
+    })
+  })
+})

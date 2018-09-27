@@ -1,8 +1,7 @@
 
 export default {
-	apis:[
-		'favorite.add',
-		'favorite.search'
-	]
+  apis: [
+    'favorite.add',
+    'favorite.search'
+  ]
 }
-
