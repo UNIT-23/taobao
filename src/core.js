@@ -6,6 +6,9 @@ import querystring from 'querystring'
 import url from 'url'
 import apierror from './error'
 import fetch from 'node-fetch'
+import FormData from 'form-data'
+import axios from 'axios'
+import fileType from 'file-type'
 
 const cfg = {
 	httpRealHost: 'gw.api.taobao.com',
@@ -24,7 +27,14 @@ const cfg = {
 
 export default class Core {
 	constructor(){
-       this.error= apierror
+	   this.error= apierror
+	   this.api = axios.create({
+		   baseUrl: '',
+		   timeout: 3000000,
+    headers: {
+      'Content-Type': 'multipart/form-data;charset=utf-8'
+    }
+	   })
     }
 
 	config(config) {
@@ -69,7 +79,7 @@ export default class Core {
 	 */
 	call (httpArgs, args, callback) {
 		//compatiple with call (args, callback) signature
-		if (arguments.length == 2) {
+		if (arguments.length === 2) {
 			callback = args;	
 			args = httpArgs;
 			httpArgs = {};
@@ -90,12 +100,6 @@ export default class Core {
 
 		args.sign = this.signArgs(args);
 
-		var	params = '',
-			app_secret = args.app_secret;
-
-		delete args.app_secret;
-		params = querystring.stringify(args);
-
 		var host, path, protocol, httpMethod, sandbox;
 		protocol = (httpArgs.protocol || 'http').toLowerCase();
 		httpMethod = (httpArgs.method || 'get').toLowerCase();
@@ -112,45 +116,60 @@ export default class Core {
 				break;
 		}
 		
-		var resData = '',
-			headers = {};
+		let headers = {};
 
 		if (httpMethod == 'post') {
 			headers['Content-Type'] = 'application/x-www-form-urlencoded';
 		}
 
-		const reqOpts = {
-			method: httpMethod.toUpperCase(),
-			headers:headers
-		};
 
-		const baseUrl = protocol + '://' + host
-		path += (httpMethod == 'get' ? '?' + params : '')
+		const baseUrl = protocol + '://' + host + path + (httpMethod === 'get' ? '?' +  querystring.stringify(_.omit(args,'app_secret')) : '')
+		console.log(baseUrl)
+		let apiCall = null
+		if(httpMethod !== 'get'){
+			console.log('post')
+		const formData =  new FormData()
 		
-		fetch(baseUrl + path, reqOpts)
-		.then(res=> res.text())
-		.then(responseAsText=>{
-			try {
-				const jsonResponse = JSON.parse(responseAsText);
-				callback(jsonResponse)
-			} catch (e) {
-				callback({error_response:{ msg: responseAsText }})
+		_.each(_.omit(args,'app_secret'), (val, key) => {
+		  if (_.isBuffer(val)) {
+			let fileProps = null
+	  
+			const buffer = Buffer.from(val)
+	  
+			if ((fileProps = fileType(buffer))) {
+			  formData.append(key, val, `${moment().unix(moment())}.${fileProps.ext}`)
 			}
+		  } else {
+			formData.append(key, val)
+		  }
 		})
-		.catch(e=>{
-			if(e.code === 'ENOTFOUND'){
-				callback({error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg}});
-			}
 			
-			callback(e)
-		})
+			apiCall = this.getHeaders(formData)
+			.then((headers)=>{
+				return  this.api.post(baseUrl, formData, {headers:{...headers,'transfer-encoding':'chunked'}})
+			})
+		}else{
+			apiCall = this.api.get(baseUrl)
+		}
+
+
+	 apiCall
+		  .then(response => callback(response.data))
+			  .catch(e=>{
+				if(e.code === 'ENOTFOUND'){
+					callback({error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg}});
+				}
+						
+				callback(e)
+			  })
 	}
 
 	signArgs(args) {
 		var argArr = [];
 
 		for (var argName in args) {
-			if (argName != 'sign' && argName != 'app_secret') {
+			if (argName != 'sign' && argName != 'app_secret' &&
+			!_.isBuffer(args[argName])) {
 				argArr.push(argName + args[argName]);
 			}
 		}
@@ -216,4 +235,19 @@ export default class Core {
 	getConfig() {
 		return cfg;
 	}
+	 getHeaders(formData){
+ return  new Promise((resolve, reject) =>
+    formData.getLength((err, length) => {
+      if (err) {
+        return reject(err)
+      }
+
+      const headers = _.extend({
+        'Content-Length': length
+      }, formData.getHeaders())
+
+      return resolve(headers)
+    })
+  )
+}
 };
