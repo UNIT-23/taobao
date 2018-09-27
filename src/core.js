@@ -125,8 +125,8 @@ export default class Core {
 		'?' +  querystring.stringify(_.omit(args,'app_secret')) : '')
 		
 		let apiCall = null
+		
 		if(httpMethod !== 'get'){
-			console.log('post')
 		const formData =  new FormData()
 		
 		_.each(_.omit(args,'app_secret'), (val, key) => {
@@ -151,7 +151,6 @@ export default class Core {
 		}else{
 			apiCall = this.api.get(baseUrl)
 		}
-
 
 	 apiCall
 		  .then(response => callback(response.data))
@@ -201,6 +200,7 @@ export default class Core {
 			throw apierror.ARGINVALID;
 		}
 	}
+
 	generateApi (apiArr, defaultNamespace) {
 		apiArr = apiArr || []
 		const api = {}
@@ -239,8 +239,9 @@ export default class Core {
 	
 	  getConfig () {
 			return cfg
-	  }
-	 getHeaders(formData){
+		}
+		
+	 	getHeaders(formData){
 			return  new Promise((resolve, reject) =>
 					formData.getLength((err, length) => {
 						if (err) {
