@@ -32,19 +32,23 @@ describe('taobao.js', function () {
     it('should get areas successfully with default http config',
       function (done) {
         this.timeout(100000)
+
         taobao.core.call({
           method: 'taobao.areas.get',
           fields: 'id,type,name,parent_id,zip'
-        }, function (data) {
-          expect(data).to.be.an('object')
-          expect(data.areas_get_response).to.be.an('object')
-          expect(data.areas_get_response.areas).to.be.an('object')
-          expect(data.areas_get_response.areas.area).to.be.an('array')
-          expect(data.areas_get_response.areas.area).to.have.length.above(0)
-          expect(data.areas_get_response.areas.area[0])
-            .to.contain.keys('id', 'name', 'parent_id', 'type')
-          done()
         })
+          .then(data => {
+            expect(data).to.be.an('object')
+            expect(data.areas_get_response).to.be.an('object')
+            expect(data.areas_get_response.areas).to.be.an('object')
+            expect(data.areas_get_response.areas.area).to.be.an('array')
+            expect(data.areas_get_response.areas.area).to.have.length.above(0)
+            expect(data.areas_get_response.areas.area[0])
+              .to.contain.keys('id', 'name', 'parent_id', 'type')
+
+            done()
+          })
+          .catch(done)
       })
 
     it('should get areas successfully with https', function (done) {
@@ -55,34 +59,46 @@ describe('taobao.js', function () {
       }, {
         method: 'taobao.areas.get',
         fields: 'id,type,name,parent_id,zip'
-      }, function (data) {
-        expect(data).to.be.an('object')
-        expect(data.areas_get_response).to.be.an('object')
-        expect(data.areas_get_response.areas).to.be.an('object')
-        expect(data.areas_get_response.areas.area).to.be.an('array')
-        expect(data.areas_get_response.areas.area)
-          .to.have.length.above(0)
-        expect(data.areas_get_response.areas.area[0])
-          .to.contain.keys('id', 'name', 'parent_id', 'type')
-        done()
       })
+        .then(data => {
+          expect(data).to.be.an('object')
+          expect(data.areas_get_response).to.be.an('object')
+          expect(data.areas_get_response.areas).to.be.an('object')
+          expect(data.areas_get_response.areas.area).to.be.an('array')
+          expect(data.areas_get_response.areas.area)
+            .to.have.length.above(0)
+          expect(data.areas_get_response.areas.area[0])
+            .to.contain.keys('id', 'name', 'parent_id', 'type')
+          done()
+        })
+        .catch(done)
     })
 
-    it('should fail when get areas using http POST method', function (done) {
+    it('should get areas successfully using http POST method', function (done) {
       this.timeout(100000)
-
+      taobao.config({
+        'app_key'   : APP_KEY,
+        'app_secret': APP_SECRET
+      })
       taobao.core.call({
         method: 'post'
       }, {
         method: 'taobao.areas.get',
         fields: 'id,type,name,parent_id,zip'
-      }, function (data) {
-        expect(data).to.be.an('object')
-        expect(data.error_response).to.be.an('object')
-        expect(data.error_response.statusCode).to.equal(411)
-
-        done()
       })
+        .then(data => {
+          expect(data).to.be.an('object')
+          expect(data.areas_get_response).to.be.an('object')
+          expect(data.areas_get_response.areas).to.be.an('object')
+          expect(data.areas_get_response.areas.area).to.be.an('array')
+          expect(data.areas_get_response.areas.area)
+            .to.have.length.above(0)
+          expect(data.areas_get_response.areas.area[0])
+            .to.contain.keys('id', 'name', 'parent_id', 'type')
+
+          done()
+        })
+        .catch(done)
     })
   })
 
@@ -100,22 +116,25 @@ describe('taobao.js', function () {
 
       done()
     })
+
     it('should success when call with generatedApi', function (done) {
       this.timeout(100000)
 
       api.areasGet({
         fields: 'id,type,name,parent_id,zip'
-      }, function (data) {
-        expect(data).to.be.an('object')
-        expect(data.areas_get_response).to.be.an('object')
-        expect(data.areas_get_response.areas).to.be.an('object')
-        expect(data.areas_get_response.areas.area).to.be.an('array')
-        expect(data.areas_get_response.areas.area).to.have.length.above(0)
-        expect(data.areas_get_response.areas.area[0])
-          .to.contain.keys('id', 'name', 'parent_id', 'type')
-
-        done()
       })
+        .then(data => {
+          expect(data).to.be.an('object')
+          expect(data.areas_get_response).to.be.an('object')
+          expect(data.areas_get_response.areas).to.be.an('object')
+          expect(data.areas_get_response.areas.area).to.be.an('array')
+          expect(data.areas_get_response.areas.area).to.have.length.above(0)
+          expect(data.areas_get_response.areas.area[0])
+            .to.contain.keys('id', 'name', 'parent_id', 'type')
+
+          done()
+        })
+        .catch(done)
     })
   })
 })

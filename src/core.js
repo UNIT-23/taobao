@@ -75,10 +75,8 @@ export default class Core {
 	 * @returns {Array[search...]}
 	 */
 
-	call (httpArgs, args, callback) {
-		//compatiple with call (args, callback) signature
-		if (arguments.length === 2) {
-			callback = args;	
+	call (httpArgs, args) {
+		if (arguments.length === 1) {
 			args = httpArgs;
 			httpArgs = {};
 		}
@@ -143,7 +141,7 @@ export default class Core {
 		  }
 		})
 		
-			apiCall = this.getHeaders(formData)
+		apiCall = this.getHeaders(formData)
 			.then(headers=> this.api.post(baseUrl, formData, {
 					headers:{...headers,'transfer-encoding':'chunked'}
 				})
@@ -152,14 +150,20 @@ export default class Core {
 			apiCall = this.api.get(baseUrl)
 		}
 
-	 apiCall
-		  .then(response => callback(response.data))
-			  .catch(e=>{
+	 return apiCall
+	 			.then(response =>{
+					if(_.has(response, 'data.error_response')){
+						throw response.data
+					}
+
+					return response.data ? response.data : response
+	 			})
+		    .catch(e=>{
 				if(e.code === 'ENOTFOUND'){
-					callback({error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg}});
+					throw {error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg}};
 				}
 						
-				callback(e)
+				throw e.data ? e.data : e
 			  })
 	}
 
@@ -181,23 +185,19 @@ export default class Core {
 	return crypt(c, args.sign_method, args.app_secret).toUpperCase()
 	}
 
-	callDefaultArg(defArg, httpArgs, args, callback) {
+	callDefaultArg(defArg, httpArgs, args) {
 		defArg = defArg || {};
 		httpArgs = httpArgs || {};
+		args = args || {}
 
-		if (_.isFunction(httpArgs)) {
-			callback = httpArgs;
-			this.call(defArg, callback);
-		} else if (_.isFunction(args)) {
-			callback = args;
-			args = httpArgs;
-			_.extend(defArg, args);
-			this.call(defArg, callback);
-		} else if (_.isFunction(callback)) {
-			_.extend(defArg, args);
-			this.call(httpArgs, defArg, callback);
-		} else {
+		if(_.isEmpty(defArg)){
 			throw apierror.ARGINVALID;
+		}else if(_.isEmpty(httpArgs)){
+			return this.call(defArg)
+		} else if(_.isEmpty(args)){
+			return this.call({...defArg,...httpArgs})
+		} else {
+			return this.call(httpArgs, {...defArg, ...args});
 		}
 	}
 
@@ -225,12 +225,12 @@ export default class Core {
 		  const methodName = (namespace === 'taobao'
 			? method : namespace + '.' + method).replace(dotReg, upperRep)
 	
-		  api[methodName] = (httpArgs, args, callback) => {
+		  api[methodName] = (httpArgs, args) => {
 			const defArg = _.extend({
 			  method: namespace + '.' + method
 			}, defaultArg)
 	
-			this.callDefaultArg(defArg, httpArgs, args, callback)
+			return this.callDefaultArg(defArg, httpArgs, args)
 		  }
 		})
 	
