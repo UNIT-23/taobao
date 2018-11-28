@@ -23,7 +23,6 @@ const cfg = {
 
 export default class Core {
   constructor () {
-    this.error = apierror
     this.api = axios.create({
       baseUrl: '',
       timeout: 3000000,
@@ -160,7 +159,7 @@ export default class Core {
 	 			})
 		    .catch(e=>{
 				if(e.code === 'ENOTFOUND'){
-					throw {error_response: {code: apierror.NETERROR.code, msg: apierror.NETERROR.msg}};
+					throw {error_response:  apierror.NETERROR};
 				}
 						
 				throw e.data ? e.data : e
